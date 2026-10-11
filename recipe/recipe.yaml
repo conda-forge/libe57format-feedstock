@@ -13,7 +13,7 @@ source:
   sha256: 28a523c87fc03f6eb146cec5c10f1e4727e21d0958f969c2cf03119c2bed9b69
 
 build:
-  number: 0
+  number: 1
   script:
     - if: unix
       then:
@@ -61,6 +61,8 @@ tests:
         then:
           - cmake -G Ninja -S test -B build ${CMAKE_ARGS}
           - cmake --build build
+          # Under qemu emulation, point the loader lookup at the target sysroot
+          - if [[ "${build_platform}" != "${target_platform}" && -z "${QEMU_LD_PREFIX:-}" ]]; then export QEMU_LD_PREFIX="$(dirname "$(dirname "$(command -v "${CXX}")")")/${CONDA_TOOLCHAIN_HOST}/sysroot"; fi
           - ./build/e57-test
       - if: win
         then:

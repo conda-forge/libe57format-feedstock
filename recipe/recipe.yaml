@@ -2,7 +2,7 @@ schema_version: 1
 
 context:
   name: libe57format
-  version: 3.3.0
+  version: 3.4.1
 
 package:
   name: ${{ name }}
@@ -10,22 +10,23 @@ package:
 
 source:
   url: https://github.com/asmaloney/libE57Format/archive/refs/tags/v${{ version }}.tar.gz
-  sha256: 0ba6de5c2ff6122c847867e81bf3f987b43ce4116b4949550c9cda277099e796
-  patches:
-    - patches/0001-use-external-crcpp.patch
+  sha256: 28a523c87fc03f6eb146cec5c10f1e4727e21d0958f969c2cf03119c2bed9b69
 
 build:
   number: 0
   script:
     - if: unix
       then:
-        - cmake -G Ninja -S . -B build ${CMAKE_ARGS} -DCMAKE_INSTALL_PREFIX="${PREFIX}" -DCMAKE_BUILD_TYPE=Release -DE57_BUILD_SHARED=ON -DE57_BUILD_TEST=OFF -DE57_USE_EXTERNAL_CRCPP=ON -DE57_RELEASE_LTO=OFF
+        - cmake -G Ninja -S . -B build ${CMAKE_ARGS} -DCMAKE_INSTALL_PREFIX="${PREFIX}" -DCMAKE_BUILD_TYPE=Release -DE57_BUILD_SHARED=ON -DE57_BUILD_TEST=ON -DE57_USE_EXTERNAL_GTEST=ON -DE57_USE_EXTERNAL_CRCPP=ON -DE57_RELEASE_LTO=OFF
         - cmake --build build
+        - if: build_platform == target_platform
+          then: ./build/testE57
         - cmake --install build
     - if: win
       then:
-        - cmake -G Ninja -S . -B build %CMAKE_ARGS% -DCMAKE_INSTALL_PREFIX="%LIBRARY_PREFIX%" -DCMAKE_BUILD_TYPE=Release -DE57_BUILD_SHARED=ON -DE57_BUILD_TEST=OFF -DE57_USE_EXTERNAL_CRCPP=ON -DE57_RELEASE_LTO=OFF
+        - cmake -G Ninja -S . -B build %CMAKE_ARGS% -DCMAKE_INSTALL_PREFIX="%LIBRARY_PREFIX%" -DCMAKE_BUILD_TYPE=Release -DE57_BUILD_SHARED=ON -DE57_BUILD_TEST=ON -DE57_USE_EXTERNAL_GTEST=ON -DE57_USE_EXTERNAL_CRCPP=ON -DE57_RELEASE_LTO=OFF
         - cmake --build build
+        - build\testE57.exe
         - cmake --install build
 
 requirements:
@@ -37,8 +38,12 @@ requirements:
   host:
     - xerces-c
     - libcrcpp
+    - gtest
   run_exports:
     - ${{ pin_subpackage('libe57format', upper_bound='x') }}
+  ignore_run_exports:
+    from_package:
+      - gtest
 
 tests:
   - package_contents:
